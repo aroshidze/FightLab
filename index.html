@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fight Lab - საპარტნიორო პრეზენტაცია</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;900&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --text-color: #f0f6fc;
+            --accent-color: #e03131;
+            --card-bg: rgba(22, 27, 34, 0.7);
+            --border-color: #30363d;
+        }
+
+        html {
+            height: 100%;
+        }
+
+        body {
+            height: 100%;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* --- SLIDE STYLES & TRANSITIONS --- */
+        .slide {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1), transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+            transform: scale(1.05);
+            pointer-events: none;
+            overflow: hidden; /* Prevents scrollbars from scaled background */
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        .slide-content-wrapper {
+             width: 100%;
+             height: 100%;
+             overflow-y: auto;
+        }
+
+        .slide-content {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto; /* Center horizontally */
+            text-align: center;
+            padding: 2rem 1rem 7rem 1rem; /* Adjusted padding for ideal spacing */
+            min-height: 100%; /* Ensure content area is at least viewport height */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box; /* Makes padding and min-height work together */
+        }
+
+        /* --- STAGGERED ELEMENT ANIMATION --- */
+        .slide .animatable {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .slide.active .animatable {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- TYPOGRAPHY --- */
+        .slide-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.5rem; /* Mobile First font size */
+            line-height: 1.2;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 0 15px rgba(224, 49, 49, 0.3);
+        }
+
+        @media (min-width: 768px) {
+            .slide-title {
+                font-size: 4.5rem;
+            }
+        }
+
+        .slide-subtitle {
+            font-size: 1rem; /* Mobile First font size */
+            font-weight: 300;
+            margin-bottom: 2.5rem;
+            color: #c9d1d9;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+
+        /* --- BACKGROUND & OVERLAY --- */
+        .bg-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -2;
+            transition: transform 10s linear;
+        }
+
+        .slide.active .bg-image {
+            transform: scale(1.1); /* Subtle zoom effect */
+        }
+
+        .slide::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, rgba(13, 17, 23, 0.4) 0%, rgba(13, 17, 23, 0.9) 100%);
+            z-index: -1;
+        }
+        
+        /* --- NAVIGATION --- */
+        .nav-controls {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            z-index: 20;
+            background: rgba(22, 27, 34, 0.5);
+            backdrop-filter: blur(10px);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid var(--border-color);
+        }
+
+        .nav-button {
+            background-color: transparent;
+            color: var(--text-color);
+            border: 1px solid transparent;
+            border-radius: 9999px;
+            width: 3rem;
+            height: 3rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .nav-button:hover {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+        }
+
+        #slide-counter {
+            color: #8b949e;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            font-size: 1rem;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        /* --- PROGRESS BAR --- */
+        .progress-bar-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background-color: var(--border-color);
+            z-index: 20;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--accent-color);
+            box-shadow: 0 0 10px var(--accent-color);
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* --- CARD & TABLE STYLES --- */
+        .table-custom {
+            background-color: var(--card-bg);
+            backdrop-filter: blur(5px);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        .table-custom th, .table-custom td {
+            padding: 1rem 1.5rem;
+            text-align: left;
+        }
+        .table-custom th {
+            background-color: var(--accent-color);
+            color: white;
+            font-weight: 500;
+        }
+        .table-custom tr {
+            transition: background-color 0.3s;
+        }
+        .table-custom tr:not(:last-child) {
+            border-bottom: 1px solid var(--border-color);
+        }
+        .table-custom tr:hover {
+            background-color: rgba(48, 54, 61, 0.5);
+        }
+
+        .stat-card {
+            background: linear-gradient(145deg, rgba(22, 27, 34, 0.7), rgba(13, 17, 23, 0.8));
+            backdrop-filter: blur(10px);
+            padding: 1.5rem; /* Responsive padding */
+            border-radius: 1rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 25px rgba(224, 49, 49, 0.4);
+        }
+        
+        /* Added for responsiveness */
+        @media (min-width: 640px) {
+             .slide-content {
+                padding: 3rem 2rem 8rem 2rem; /* Adjusted padding for larger screens */
+            }
+             .slide-subtitle {
+                font-size: 1.25rem;
+            }
+            .stat-card {
+                padding: 2rem;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Slide 1: Title -->
+    <section class="slide active" id="slide-1">
+        <img src="https://github.com/aroshidze/FightLab/blob/main/slide1.png?raw=true" alt="მებრძოლი ოქტაგონზე" class="bg-image">
+        <div class="slide-content-wrapper">
+            <div class="slide-content">
+                <h1 class="text-6xl md:text-8xl font-black uppercase tracking-wider text-white animatable" style="font-family: 'Poppins', sans-serif; text-shadow: 3px 3px 15px rgba(0,0,0,0.7);">Fight Lab</h1>
+                <p class="slide-subtitle mt-4 text-2xl md:text-3xl animatable">ექსკლუზიური ინტერვიუები, პროფესიონალური ანალიზი</p>
+                <p class="text-gray-400 text-lg mt-8 animatable">მეტი ვიდრე MMA პოდკასტი</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 2: Market Overview -->
+    <section class="slide" id="slide-2">
+         <div class="slide-content-wrapper">
+            <div class="slide-content">
+                <h2 class="slide-title animatable">ბაზრის მიმოხილვა</h2>
+                <p class="slide-subtitle animatable">MMA არის ყველაზე მზარდი სპორტის სახეობა მსოფლიოში</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 text-left text-base animatable">
+                    <div class="stat-card h-full">
+                        <h3 class="font-bold text-xl mb-3 text-white">გიგანტური პოტენციალი</h3>
+                        <p class="text-gray-300">ქართველმა სპორტსმენებმა მიაღწიეს უდიდეს წარმატებას და ეს მხოლოდ დასაწყისია, რადგან ქვეყანაში კიდევ გვაქვს ზრდის დიდი პოტენციალი.</p>
+                    </div>
+                    <div class="stat-card h-full">
+                        <h3 class="font-bold text-xl mb-3 text-white">აუდიტორიის მოთხოვნა</h3>
+                        <p class="text-gray-300">MMA-ის ვარსკვლავებს საქართველოში ყველა იცნობს, თუმცა ბაზარზე აშკარაა ხარისხიანი, ადგილობრივი მედია კონტენტის დეფიციტი.</p>
+                    </div>
+                    <div class="stat-card h-full">
+                        <h3 class="font-bold text-xl mb-3 text-white">სტრატეგიული ნიშა</h3>
+                        <p class="text-gray-300">"Fight Lab" იკავებს ამ თავისუფალ ნიშას და აკმაყოფილებს მზარდ მოთხოვნას მაღალი დონის, პროფესიონალურ MMA კონტენტზე.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 3: About the Project -->
+    <section class="slide" id="slide-3">
+        <img src="https://github.com/aroshidze/FightLab/blob/main/slide3.png?raw=true" alt="კადრები გადაცემიდან" class="bg-image">
+        <div class="slide-content-wrapper">
+            <div class="slide-content">
+                <h2 class="slide-title animatable">რა არის Fight Lab?</h2>
+                <p class="slide-subtitle max-w-3xl mx-auto animatable">"Fight Lab" არის საქართველოში დაფუძნებული MMA პოდკასტი, რომლის მისიაა, გახდეს MMA-ის მოყვარულთა მთავარი მედია პლატფორმა საქართველოში და მის ფარგლებს გარეთ.</p>
+                <div class="animatable">
+                    <p class="text-lg text-white">პროექტმა უკვე წარმატებით ჩაწერა სამი ეპიზოდი ქართველ MMA ვარსკვლავებთან:</p>
+                    <p class="text-2xl font-bold mt-4 text-red-500">მერაბ დვალიშვილთან, გიგა ჭიკაძესთან და ლევან ჩოხელთან ერთად.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Slide 4: Our Advantage -->
+    <section class="slide" id="slide-4">
+        <div class="slide-content-wrapper">
+            <div class="slide-content">
+                 <h2 class="slide-title animatable">ჩვენი უპირატესობა</h2>
+                <p class="slide-subtitle animatable">პროფესიონალიზმი და ექსკლუზიური კავშირები</p>
+                <div class="flex flex-col md:flex-row items-center gap-6 md:gap-12 animatable">
+                    <div class="md:w-1/3 flex-shrink-0">
+                        <img src="https://placehold.co/400x400/161b22/f0f6fc?text=NB" alt="ნიკოლოზ ბერაძე" class="rounded-full border-4 border-red-600 shadow-lg w-52 h-52 md:w-64 md:h-64 mx-auto object-cover">
+                    </div>
+                    <div class="md:w-2/3 text-left space-y-4">
+                        <p class="text-xl font-bold text-white">პროექტის მთავარი უპირატესობა მისი წამყვანი, ნიკოლოზ ბერაძეა:</p>
+                        <ul class="list-disc list-inside text-gray-300 space-y-3 text-lg">
+                            <li><b>გამოცდილება:</b> 15-წლიანი კარიერა სპორტულ ჟურნალისტიკაში.</li>
+                            <li><b>კომპეტენცია:</b> თავად არის MMA-ის მიმართულებით მოვარჯიშე სპორტსმენი, რაც სიღრმისეული ანალიზის საშუალებას იძლევა.</li>
+                            <li><b>კავშირები:</b> პირადი და პროფესიული ურთიერთობა ყველა ქართველ მებრძოლთან და წვდომა საერთაშორისო დონის გუნდებთან.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Slide 5: Content -->
+    <section class="slide" id="slide-5">
+        <div class="slide-content-wrapper">
+            <div class="slide-content">
+                <h2 class="slide-title animatable">ჩვენი კონტენტი</h2>
+                <p class="slide-subtitle animatable">3 სეგმენტი, 1 მიზანი - მაყურებლის მაქსიმალური ჩართულობა</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 text-center animatable">
+                    <div class="stat-card h-full">
+                        <div class="text-red-500 mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mx-auto"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>
+                        </div>
+                        <h3 class="font-bold text-xl mb-2 text-white">სტუმრის სეგმენტი</h3>
+                        <p class="text-gray-300">სიღრმისეული, ექსკლუზიური ინტერვიუ მოწვეულ სტუმართან.</p>
+                    </div>
+                    <div class="stat-card h-full">
+                        <div class="text-red-500 mb-4">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mx-auto"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                        </div>
+                        <h3 class="font-bold text-xl mb-2 text-white">ანალიტიკური სეგმენტი</h3>
+                        <p class="text-gray-300">აქტუალური მოვლენების პროფესიონალური ანალიზი და TOP 5-ების შედგენა.</p>
+                    </div>
+                    <div class="stat-card h-full">
+                        <div class="text-red-500 mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mx-auto"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                        </div>
+                        <h3 class="font-bold text-xl mb-2 text-white">პრაქტიკული სეგმენტი</h3>
+                        <p class="text-gray-300">შემეცნებითი ვარჯიში, სადაც ილეთები და კომბინაციები მარტივად არის ახსნილი.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 6: Results -->
+    <section class="slide" id="slide-6">
+        <div class="slide-content-wrapper">
+            <div class="slide-content">
+                <h2 class="slide-title animatable">უკვე მიღწეული შედეგები</h2>
+                <p class="slide-subtitle animatable">სპონსორის გარეშე, სრულად ორგანული ზრდა</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 animatable">
+                    <div class="stat-card">
+                        <p class="text-3xl sm:text-4xl lg:text-5xl font-black text-red-500">305K+</p>
+                        <p class="mt-2 text-white">ჯამური ნახვები</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="text-3xl sm:text-4xl lg:text-5xl font-black text-red-500">15K+</p>
+                        <p class="mt-2 text-white">YouTube ნახვები</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="text-3xl sm:text-4xl lg:text-5xl font-black text-red-500">300K+</p>
+                        <p class="mt-2 text-white">Reels/Shorts ნახვები</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="text-3xl sm:text-4xl lg:text-5xl font-black text-red-500">165K+</p>
+                        <p class="mt-2 text-white">Facebook Reach</p>
+                    </div>
+                </div>
+                <p class="mt-8 text-lg text-gray-300 animatable">ეს ციფრები ადასტურებს, რომ ჩვენი კონტენტი მოთხოვნადი და საინტერესოა აუდიტორიისთვის.</p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Slide 7: Future Plans -->
+    <section class="slide" id="slide-7">
+        <img src="https://github.com/aroshidze/FightLab/blob/main/slide7.png?raw=true" alt="მებრძოლის საწვრთნელი პროცესი" class="bg-image">
+        <div class="slide-content-wrapper">
+            <div class="slide-content">
+                <h2 class="slide-title animatable">ხედვა და სამომავლო გეგმები</h2>
+                 <p class="slide-subtitle animatable">Fight Lab არ არის მხოლოდ პოდკასტი, ეს არის მზარდი მედია პლატფორმა</p>
+                <div class="flex flex-col md:flex-row gap-4 md:gap-8 text-left animatable">
+                    <div class="md:w-1/2 stat-card h-full">
+                        <h3 class="font-bold text-xl mb-3 text-white">კონტენტის გაფართოება</h3>
+                        <ul class="list-disc list-inside text-gray-300 space-y-2">
+                            <li>მინი-დოკუმენტური ფილმები მებრძოლებზე.</li>
+                            <li>ცნობილი მებრძოლების Training Camp-ების ექსკლუზიური გაშუქება.</li>
+                            <li>MMA ივენთების კულისებიდან რეპორტაჟები.</li>
+                        </ul>
+                    </div>
+                     <div class="md:w-1/2 stat-card h-full">
+                        <h3 class="font-bold text-xl mb-3 text-white">საერთაშორისო ბაზარი</h3>
+                        <ul class="list-disc list-inside text-gray-300 space-y-2">
+                              <li>უცხოელი სტუმრების მოწვევა.</li>
+                              <li>ინგლისურენოვანი კონტენტის შექმნა და ადაპტირება გლობალური აუდიტორიისთვის.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 8: Costs -->
+    <section class="slide" id="slide-8">
+        <div class="slide-content-wrapper">
+            <div class="slide-content">
+                <h2 class="slide-title animatable">პროექტის სავარაუდო ხარჯები</h2>
+                <p class="slide-subtitle animatable max-w-4xl mx-auto">გთხოვთ გაითვალისწინოთ, რომ ბიუჯეტი მოქნილია და შესაძლებელია მისი მორგება კონკრეტული პარტნიორის საჭიროებების შესაბამისად.</p>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8 w-full animatable">
+                    <div>
+                        <h3 class="text-2xl font-bold mb-4 text-white">ხარჯები 1 ეპიზოდზე</h3>
+                        <table class="w-full text-lg table-custom">
+                            <tbody>
+                                <tr><td>სტუდია და ტექნიკა</td><td class="font-bold text-right">1,000 ლარი</td></tr>
+                                <tr><td>მარკეტინგი</td><td class="font-bold text-right">500 ლარი</td></tr>
+                                <tr><td>გუნდის ანაზღაურება</td><td class="font-bold text-right">2,250 ლარი</td></tr>
+                                <tr class="bg-gray-800/50"><td class="text-red-500 font-bold">სულ 1 ეპიზოდზე:</td><td class="font-bold text-red-500 text-right">3,750 ლარი</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div>
+                         <h3 class="text-2xl font-bold mb-4 text-white">თვიური ბიუჯეტი (4 ეპიზოდი)</h3>
+                        <table class="w-full text-lg table-custom">
+                            <tbody>
+                                <tr><td>გუნდის ანაზღაურება</td><td class="font-bold text-right">9,000 ლარი</td></tr>
+                                <tr><td>სტუდია და ტექნიკა</td><td class="font-bold text-right">4,000 ლარი</td></tr>
+                                <tr><td>მარკეტინგი</td><td class="font-bold text-right">2,000 ლარი</td></tr>
+                                <tr class="bg-gray-800/50"><td class="text-red-500 font-bold">სულ თვეში:</td><td class="font-bold text-red-500 text-right">15,000 ლარი</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Slide 9: Sponsorship Exclusive -->
+    <section class="slide" id="slide-9">
+         <div class="slide-content-wrapper">
+            <div class="slide-content">
+                <h2 class="slide-title animatable">ექსკლუზიური სპონსორი</h2>
+                 <p class="slide-subtitle animatable">გახდით Fight Lab-ის ერთადერთი მთავარი პარტნიორი!</p>
+                 <div class="stat-card max-w-4xl mx-auto animatable">
+                     <div class="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-8">
+                         <div class="text-center">
+                             <p class="text-3xl md:text-4xl font-black text-red-500">20,000 ლარი/თვე</p>
+                             <p class="text-lg md:text-xl text-gray-400">(მინ. 4 ეპიზოდი)</p>
+                         </div>
+                         <div class="my-2 md:my-0 md:self-center">
+                             <p class="text-xl md:text-2xl text-white">ან</p>
+                         </div>
+                         <div class="text-center">
+                             <p class="text-3xl md:text-4xl font-black text-red-500">5,000 ლარი/ეპიზოდი</p>
+                             <p class="text-lg md:text-xl text-gray-400 invisible">Placeholder</p> 
+                         </div>
+                     </div>
+                     <ul class="text-left list-disc list-inside mt-6 space-y-2 text-lg text-gray-300 max-w-xl mx-auto">
+                         <li><b>სრული ექსკლუზივი:</b> თქვენი ბრენდი იქნება პროექტის ერთადერთი მთავარი პარტნიორი.</li>
+                         <li><b>ყველა სეგმენტის სპონსორობა:</b> თქვენი ბრენდი იქნება გადაცემის სამივე სეგმენტის ერთადერთი სპონსორი.</li>
+                         <li><b>მაქსიმალური ინტეგრაცია:</b> ლოგო, წამყვანის ხსენება, პრომოუშენი ყველა სოციალურ ქსელში.</li>
+                     </ul>
+                 </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Slide 10: Sponsorship Segments -->
+     <section class="slide" id="slide-10">
+        <div class="slide-content-wrapper">
+            <div class="slide-content">
+                <h2 class="slide-title animatable">სეგმენტების სპონსორობა</h2>
+                <p class="slide-subtitle animatable">შესაძლებელია მხოლოდ იმ შემთხვევაში, თუ პროექტს არ ჰყავს ექსკლუზიური გენერალური სპონსორი</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 animatable">
+                    <div class="stat-card h-full">
+                        <h3 class="font-bold text-xl mb-2 text-white">სტუმრის სეგმენტი</h3>
+                        <p class="text-3xl font-black text-red-500 my-4">2,500 ლ/ეპიზოდი</p>
+                        <p class="text-gray-300">თქვენი ბრენდი წარმოდგენილი იქნება პოდკასტის მთავარ, ინტერვიუს ნაწილში.</p>
+                    </div>
+                     <div class="stat-card h-full">
+                        <h3 class="font-bold text-xl mb-2 text-white">ანალიტიკური/პრაქტიკული</h3>
+                        <p class="text-3xl font-black text-red-500 my-4">1,500 ლ/ეპიზოდი</p>
+                        <p class="text-gray-300">თქვენი ბრენდი დაუკავშირდება TOP 5-ების გარჩევას ან პრაქტიკულ ვარჯიშს.</p>
+                    </div>
+                     <div class="stat-card h-full">
+                        <h3 class="font-bold text-xl mb-2 text-white">თემატური პარტნიორობა</h3>
+                        <p class="text-3xl font-black text-red-500 my-4">ბარტერი</p>
+                        <p class="text-gray-300">მაგ: სავარჯიშო დარბაზი გვითმობს ლოკაციას და იღებს "ოფიციალური პარტნიორის" სტატუსს.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Slide 11: Why Us? -->
+    <section class="slide" id="slide-11">
+        <img src="https://github.com/aroshidze/FightLab/blob/main/slide11.png?raw=true" alt="ბრენდის ლოგო" class="bg-image">
+         <div class="slide-content-wrapper">
+            <div class="slide-content">
+                <h2 class="slide-title animatable">რატომ Fight Lab?</h2>
+                  <p class="slide-subtitle animatable">ეს არ არის მხოლოდ რეკლამა - ეს არის ინვესტიცია და სტრატეგიული პარტნიორობა</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 text-left animatable">
+                    <div class="stat-card h-full">
+                        <h3 class="font-bold text-xl mb-3 text-white">წვდომა სამიზნე აუდიტორიაზე</h3>
+                        <p class="text-gray-300">პირდაპირი წვდომა ლოიალურ, აქტიურ და მზარდ აუდიტორიაზე, რომელიც გატაცებულია სპორტით.</p>
+                    </div>
+                    <div class="stat-card h-full">
+                        <h3 class="font-bold text-xl mb-3 text-white">პოზიტიური ასოციაცია</h3>
+                        <p class="text-gray-300">თქვენი ბრენდი დაუკავშირდება წარმატებას, სიძლიერესა და პროფესიონალიზმს.</p>
+                    </div>
+                    <div class="stat-card h-full">
+                        <h3 class="font-bold text-xl mb-3 text-white">უნიკალური კონტენტი</h3>
+                        <p class="text-gray-300">თქვენი ბრენდის ინტეგრაცია ექსკლუზიურ და მაღალი ხარისხის კონტენტში, რომელსაც ანალოგი არ ჰყავს.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 12: Contact -->
+    <section class="slide" id="slide-12">
+        <div class="slide-content-wrapper">
+            <div class="slide-content">
+                <h2 class="slide-title animatable">მადლობას გიხდით!</h2>
+                <p class="slide-subtitle animatable">შემოგვიერთდით და ერთად დავიკავოთ დომინანტური პოზიცია შერეული ორთაბრძოლების სამყაროში.</p>
+                <div class="mt-8 text-xl space-y-2 text-white animatable stat-card max-w-md mx-auto">
+                    <p class="font-bold text-2xl">ნიკოლოზ ბერაძე</p>
+                    <p>პროექტის ავტორი და წამყვანი</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Navigation Controls -->
+    <div class="nav-controls">
+        <button id="prevBtn" class="nav-button">‹</button>
+        <div id="slide-counter">1 / 12</div>
+        <button id="nextBtn" class="nav-button">›</button>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar-container">
+        <div id="progressBar" class="progress-bar"></div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const progressBar = document.getElementById('progressBar');
+        const slideCounter = document.getElementById('slide-counter');
+        let currentSlide = 0;
+
+        // This function adds staggered animation delays to elements inside the active slide
+        function animateElements(slide) {
+            const elementsToAnimate = slide.querySelectorAll('.animatable');
+            elementsToAnimate.forEach((el, index) => {
+                el.style.transitionDelay = `${index * 0.1 + 0.2}s`;
+            });
+        }
+        
+        // This function resets animations for elements in the outgoing slide
+        function resetAnimations(slide) {
+             const elementsToAnimate = slide.querySelectorAll('.animatable');
+             elementsToAnimate.forEach((el) => {
+                el.style.transitionDelay = `0s`;
+            });
+        }
+
+        function updateSlides(previousSlideIndex = -1) {
+             if(previousSlideIndex !== -1) {
+                resetAnimations(slides[previousSlideIndex]);
+            }
+            
+            slides.forEach((slide, index) => {
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                    animateElements(slide);
+                } else {
+                    slide.classList.remove('active');
+                }
+            });
+
+            // Update progress bar
+            const progress = ((currentSlide + 1) / slides.length) * 100;
+            progressBar.style.width = `${progress}%`;
+
+            // Update slide counter
+            slideCounter.textContent = `${currentSlide + 1} / ${slides.length}`;
+            
+            // Handle button visibility/state
+            prevBtn.style.opacity = currentSlide === 0 ? '0.5' : '1';
+            prevBtn.style.pointerEvents = currentSlide === 0 ? 'none' : 'auto';
+            nextBtn.style.opacity = currentSlide === slides.length - 1 ? '0.5' : '1';
+            nextBtn.style.pointerEvents = currentSlide === slides.length - 1 ? 'none' : 'auto';
+        }
+
+        function nextSlide() {
+            if (currentSlide < slides.length - 1) {
+                const oldSlide = currentSlide;
+                currentSlide++;
+                updateSlides(oldSlide);
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                const oldSlide = currentSlide;
+                currentSlide--;
+                updateSlides(oldSlide);
+            }
+        }
+
+        nextBtn.addEventListener('click', nextSlide);
+        prevBtn.addEventListener('click', prevSlide);
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') { // Add spacebar for next
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevSlide();
+            }
+        });
+        
+        // Initialize the first slide on load
+        updateSlides();
+    </script>
+</body>
+</html>
